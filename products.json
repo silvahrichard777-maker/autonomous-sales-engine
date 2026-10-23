@@ -1,0 +1,16 @@
+
+{
+  "products": [
+    {
+      "id": "demo-001",
+      "name": "Produto de demonstração",
+      "platform": "manual",
+      "type": "affiliate",
+      "price": 97,
+      "commission": 30,
+      "affiliate_link": "",
+      "category": "educacao",
+      "status": "draft"
+    }
+  ]
+}
