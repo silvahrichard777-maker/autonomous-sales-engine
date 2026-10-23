@@ -1,0 +1,19 @@
+Autonomous Sales Engine
+
+Robô de vendas automatizadas multicanal para produtos digitais próprios e produtos promovidos como afiliado.
+
+Objetivos
+
+* Organizar produtos e links de afiliados.
+* Criar campanhas de divulgação.
+* Automatizar publicações por integrações autorizadas.
+* Acompanhar cliques, vendas e comissões.
+* Integrar plataformas como Hotmart, Eduzz e Kiwify.
+
+Desenvolvimento
+
+Projeto em fase inicial. As integrações e funcionalidades serão implementadas e testadas gradualmente.
+
+Segurança
+
+Não armazenar senhas, tokens de API ou credenciais neste repositório.
