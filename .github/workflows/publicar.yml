@@ -34,8 +34,6 @@ jobs:
               print("Erro: o token do Telegram esta com formato errado (tamanho", len(token), ")")
               sys.exit(1)
 
-          lojas = {"shopee": "Shopee", "mercadolivre": "Mercado Livre", "amazon": "Amazon"}
-
           with open("products.json", encoding="utf-8") as f:
               dados = json.load(f)
 
@@ -43,15 +41,25 @@ jobs:
           for p in dados["products"]:
               if p.get("status") != "published":
                   continue
-              linhas = ["🔥 " + p["name"]]
+
+              linhas = ["💥😱 " + p["name"], ""]
               if p.get("price") is not None:
-                  linhas.append("💰 R$ " + f"{p['price']:.2f}".replace(".", ","))
-              linhas.append("🛒 " + lojas.get(p["platform"], p["platform"]))
-              linhas.append("👉 " + p["affiliate_link"])
+                  linhas += ["🤑 R$ " + f"{p['price']:.2f}".replace(".", ","), ""]
+              if p.get("coupon"):
+                  linhas += ["🎟️ Cupom: " + p["coupon"], ""]
+              linhas += ["✅ LINK: " + p["affiliate_link"], ""]
+              linhas += ["⚠️ Preço e estoque sujeitos a alteração.", "📢 Anúncio"]
               texto = "\n".join(linhas)
 
-              url = "https://api.telegram.org/bot" + token + "/sendMessage"
-              corpo = urllib.parse.urlencode({"chat_id": chat, "text": texto}).encode()
+              if p.get("image"):
+                  url = "https://api.telegram.org/bot" + token + "/sendPhoto"
+                  campos = {"chat_id": chat, "photo": p["image"], "caption": texto}
+              else:
+                  url = "https://api.telegram.org/bot" + token + "/sendMessage"
+                  prev = {"show_above_text": True, "prefer_large_media": True}
+                  campos = {"chat_id": chat, "text": texto, "link_preview_options": json.dumps(prev)}
+              corpo = urllib.parse.urlencode(campos).encode()
+
               try:
                   with urllib.request.urlopen(urllib.request.Request(url, data=corpo), timeout=30) as r:
                       resposta = json.load(r)
