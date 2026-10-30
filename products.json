@@ -21,15 +21,15 @@
       "affiliate_link": "https://meli.la/1p1KZxd",
       "category": "eletronicos",
       "status": "posted"
-    },{
-  "id": "ml-fone-chrome-001",
-  "name": "Fone de Ouvido Bluetooth 5.0 Chrome Technology TWS Sem Fio",
-  "platform": "mercadolivre",
-  "kind": "fisico",
-  "price": 25.97,
-  "affiliate_link": "https://meli.la/2RjSaZH",
-  "status": "published"
-}
-
+    },
+    {
+      "id": "ml-fone-chrome-001",
+      "name": "Fone de Ouvido Bluetooth 5.0 Chrome Technology TWS Sem Fio",
+      "platform": "mercadolivre",
+      "kind": "fisico",
+      "price": 25.97,
+      "affiliate_link": "https://meli.la/2RjSaZH",
+      "status": "posted"
+    }
   ]
 }
