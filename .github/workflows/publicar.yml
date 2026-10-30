@@ -1,52 +1,58 @@
 name: Publicar ofertas
+
 on:
   workflow_dispatch:
-  schedule:
-    - cron: "0 15,23 * * *"
+
 permissions:
   contents: write
+
 jobs:
   publicar:
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Escolher e enviar oferta
+
+      - name: Publicar ofertas no canal
         env:
-          TOKEN_RAW: ${{ secrets.TELEGRAM_BOT_TOKEN }}
-          CHAT_RAW: ${{ secrets.TELEGRAM_CHAT_ID }}
+          TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          CHAT: ${{ secrets.TELEGRAM_CHAT_ID }}
         run: |
-          python3 - <<'EOF'
-          import json, os, urllib.parse, urllib.request
-          token = "".join(os.environ["TOKEN_RAW"].split())
-          chat = "".join(os.environ["CHAT_RAW"].split())
-          with open("products.json", encoding="utf-8") as f:
-              data = json.load(f)
-          oferta = next((p for p in data["products"] if p.get("status") == "approved"), None)
-          if oferta is None:
-              print("Nenhuma oferta aprovada. Nada a publicar.")
-              raise SystemExit(0)
-          preco = f'R$ {float(oferta["price"]):.2f}'.replace(".", ",")
-          texto = (
-              f'🔥 {oferta["name"]}\n'
-              f'💰 {preco}\n'
-              f'🛒 {oferta["affiliate_link"]}'
-          )
-          dados = urllib.parse.urlencode({"chat_id": chat, "text": texto}).encode()
-          url = f"https://api.telegram.org/bot{token}/sendMessage"
-          with urllib.request.urlopen(url, data=dados) as r:
-              resposta = json.loads(r.read())
-          if not resposta.get("ok"):
-              raise SystemExit(f"Telegram recusou: {resposta}")
-          oferta["status"] = "published"
-          with open("products.json", "w", encoding="utf-8") as f:
-              json.dump(data, f, ensure_ascii=False, indent=2)
-              f.write("\n")
-          print("Oferta publicada:", oferta["id"])
-          EOF
-      - name: Salvar status no repositorio
+          set -eo pipefail
+          n=$(jq '.products | length' products.json)
+          enviadas=0
+          for i in $(seq 0 $((n-1))); do
+            status=$(jq -r --argjson i "$i" '.products[$i].status' products.json)
+            if [ "$status" != "published" ]; then continue; fi
+            texto=$(jq -r --argjson i "$i" '.products[$i] |
+              ({"shopee":"Shopee","mercadolivre":"Mercado Livre","amazon":"Amazon"}[.platform] // .platform) as $loja |
+              "🔥 " + .name + "\n" +
+              (if .price then
+                ((.price * 100 | round) as $c |
+                 "💰 R$ " + (($c / 100 | floor) | tostring) + "," + (($c % 100) | tostring | if length < 2 then "0" + . else . end) + "\n")
+              else "" end) +
+              "🛒 " + $loja + "\n" +
+              "👉 " + .affiliate_link' products.json)
+            resposta=$(curl -s -X POST "https://api.telegram.org/bot${TOKEN}/sendMessage" \
+              --data-urlencode "chat_id=${CHAT}" \
+              --data-urlencode "text=${texto}")
+            if echo "$resposta" | jq -e '.ok == true' > /dev/null; then
+              jq --argjson i "$i" '.products[$i].status = "posted"' products.json > tmp.json
+              mv tmp.json products.json
+              enviadas=$((enviadas+1))
+            else
+              echo "Erro ao enviar: $(echo "$resposta" | jq -r '.description')"
+              exit 1
+            fi
+            sleep 3
+          done
+          echo "Ofertas enviadas: $enviadas"
+
+      - name: Salvar o que foi publicado
+        if: always()
         run: |
-          git config user.name "robo-radar"
+          git config user.name "robo"
           git config user.email "robo@users.noreply.github.com"
           git add products.json
-          git diff --cached --quiet || (git commit -m "Marca oferta como publicada" && git push)
+          git diff --staged --quiet || (git commit -m "Ofertas publicadas" && git push)
+
 
