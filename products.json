@@ -11,6 +11,18 @@
       "affiliate_link": "https://s.shopee.com.br/qkg3iqn2s",
       "category": "eletronicos",
       "status": "published"
+          },
+     {
+      "id": "ml-tech-em-oferta-001",
+      "name": "Tech em Oferta",
+      "platform": "mercadolivre",
+      "kind": "fisico",
+      "type": "affiliate",
+      "affiliate_link": "https://meli.la/1p1KZxd",
+      "category": "eletronicos",
+      "status": "draft"
     }
   ]
 }
+
+
