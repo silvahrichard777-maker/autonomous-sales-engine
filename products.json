@@ -1,16 +1,17 @@
-
 {
   "products": [
     {
-      "id": "demo-001",
-      "name": "Produto de demonstração",
-      "platform": "manual",
+      "id": "shopee-760bt-001",
+      "name": "Fone de ouvido Wireless sem fio Bluetooth 760BT Microfone Pure Bass Cancelamento Ativo de Ruído",
+      "platform": "shopee",
+      "kind": "fisico",
       "type": "affiliate",
-      "price": 97,
-      "commission": 30,
-      "affiliate_link": "",
-      "category": "educacao",
-      "status": "draft"
+      "price": 39.55,
+      "commission": null,
+      "affiliate_link": "https://s.shopee.com.br/qkg3iqn2s",
+      "category": "eletronicos",
+      "status": "approved"
     }
   ]
 }
+
