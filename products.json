@@ -10,9 +10,9 @@
       "commission": 23,
       "affiliate_link": "https://s.shopee.com.br/qkg3iqn2s",
       "category": "eletronicos",
-      "status": "published"
-          },
-     {
+      "status": "posted"
+    },
+    {
       "id": "ml-tech-em-oferta-001",
       "name": "Tech em Oferta",
       "platform": "mercadolivre",
@@ -24,5 +24,3 @@
     }
   ]
 }
-
-
