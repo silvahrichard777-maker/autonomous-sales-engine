@@ -2,6 +2,8 @@ name: Publicar ofertas
 
 on:
   workflow_dispatch:
+  schedule:
+    - cron: "0 11-23/2 * * *"
 
 permissions:
   contents: write
@@ -68,7 +70,7 @@ jobs:
                       json.dump(dados, f, ensure_ascii=False, indent=2)
                       f.write("\n")
                   print("Enviada:", p["name"])
-                  time.sleep(3)
+                  break
               else:
                   print("Erro ao enviar:", p["name"], "-", resposta.get("description"))
                   sys.exit(1)
