@@ -6,13 +6,16 @@ jobs:
     steps:
       - name: Enviar mensagem de teste
         env:
-          TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
-          CHAT: ${{ secrets.TELEGRAM_CHAT_ID }}
+          TOKEN_RAW: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          CHAT_RAW: ${{ secrets.TELEGRAM_CHAT_ID }}
         run: |
+          TOKEN=$(echo "$TOKEN_RAW" | tr -d '[:space:]')
+          CHAT=$(echo "$CHAT_RAW" | tr -d '[:space:]')
           echo "Tamanho do token: ${#TOKEN}"
-          echo "Chat usado: $CHAT"
-          RESPOSTA=$(curl -s -X POST "https://api.telegram.org/bot${TOKEN}/sendMessage" \
+          echo "Tamanho do chat: ${#CHAT}"
+          RESPOSTA=$(curl -s -w "\nHTTP %{http_code}" -X POST "https://api.telegram.org/bot${TOKEN}/sendMessage" \
             -d chat_id="${CHAT}" \
             -d text="✅ Teste do Radar de Ofertas BR")
           echo "Resposta do Telegram: $RESPOSTA"
+
 
