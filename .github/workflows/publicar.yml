@@ -1,0 +1,48 @@
+name: Publicar ofertas
+on: workflow_dispatch
+permissions:
+  contents: write
+jobs:
+  publicar:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Escolher e enviar oferta
+        env:
+          TOKEN_RAW: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          CHAT_RAW: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: |
+          python3 - <<'EOF'
+          import json, os, urllib.parse, urllib.request
+          token = "".join(os.environ["TOKEN_RAW"].split())
+          chat = "".join(os.environ["CHAT_RAW"].split())
+          with open("products.json", encoding="utf-8") as f:
+              data = json.load(f)
+          oferta = next((p for p in data["products"] if p.get("status") == "approved"), None)
+          if oferta is None:
+              print("Nenhuma oferta aprovada. Nada a publicar.")
+              raise SystemExit(0)
+          preco = f'R$ {float(oferta["price"]):.2f}'.replace(".", ",")
+          texto = (
+              f'🔥 {oferta["name"]}\n'
+              f'💰 {preco}\n'
+              f'🛒 {oferta["affiliate_link"]}'
+          )
+          dados = urllib.parse.urlencode({"chat_id": chat, "text": texto}).encode()
+          url = f"https://api.telegram.org/bot{token}/sendMessage"
+          with urllib.request.urlopen(url, data=dados) as r:
+              resposta = json.loads(r.read())
+          if not resposta.get("ok"):
+              raise SystemExit(f"Telegram recusou: {resposta}")
+          oferta["status"] = "published"
+          with open("products.json", "w", encoding="utf-8") as f:
+              json.dump(data, f, ensure_ascii=False, indent=2)
+              f.write("\n")
+          print("Oferta publicada:", oferta["id"])
+          EOF
+      - name: Salvar status no repositorio
+        run: |
+          git config user.name "robo-radar"
+          git config user.email "robo@users.noreply.github.com"
+          git add products.json
+          git diff --cached --quiet || (git commit -m "Marca oferta como publicada" && git push)
