@@ -28,7 +28,8 @@
       "kind": "fisico",
       "price": 49.9,
       "affiliate_link": "https://meli.la/27SDDtf",
-      "status": "published"
+      "status": "posted",
+      "published_at": "2026-10-31T18:27:33.561730+00:00"
     },
     {
       "id": "ml-liquidificador-001",
