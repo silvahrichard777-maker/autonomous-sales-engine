@@ -1,3 +1,4 @@
+
 name: Publicar ofertas
 
 on:
@@ -8,88 +9,139 @@ on:
 permissions:
   contents: write
 
+concurrency:
+  group: publicar-ofertas
+  cancel-in-progress: false
+
 jobs:
   publicar:
     runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
 
-      - name: Publicar ofertas no canal
+    steps:
+      - name: Baixar arquivos
+        uses: actions/checkout@v4
+
+      - name: Publicar um produto no Telegram
         env:
           TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           CHAT: ${{ secrets.TELEGRAM_CHAT_ID }}
         run: |
           python3 - <<'PY'
-          import json, os, re, sys, time, urllib.error, urllib.parse, urllib.request
+          import json
+          import os
+          import sys
+          import urllib.parse
+          import urllib.request
+          from datetime import datetime, timezone
 
-          bruto = os.environ.get("TOKEN", "")
-          token = re.sub(r"[^0-9A-Za-z:_-]", "", bruto)
+          token = os.environ.get("TOKEN", "").strip()
           chat = os.environ.get("CHAT", "").strip()
-          if not bruto or not chat:
-              print("Erro: faltam os secrets TELEGRAM_BOT_TOKEN ou TELEGRAM_CHAT_ID")
-              sys.exit(1)
-          if len(token) != len(bruto):
-              print("Aviso: removi", len(bruto) - len(token), "caractere(s) estranho(s) do token")
-          if not re.fullmatch(r"[0-9]+:[A-Za-z0-9_-]+", token):
-              print("Erro: o token do Telegram esta com formato errado (tamanho", len(token), ")")
+
+          if not token or not chat:
+              print("Erro: configure os Secrets do Telegram.")
               sys.exit(1)
 
           with open("products.json", encoding="utf-8") as f:
               dados = json.load(f)
 
-          enviadas = 0
+          produto = None
+
           for p in dados["products"]:
-              if p.get("status") != "published":
-                  continue
-
-              linhas = ["💥😱 " + p["name"], ""]
-              if p.get("price") is not None:
-                  linhas += ["🤑 R$ " + f"{p['price']:.2f}".replace(".", ","), ""]
-              if p.get("coupon"):
-                  linhas += ["🎟️ Cupom: " + p["coupon"], ""]
-              linhas += ["✅ LINK: " + p["affiliate_link"], ""]
-              linhas += ["⚠️ Preço e estoque sujeitos a alteração.", "📢 Anúncio"]
-              texto = "\n".join(linhas)
-
-              if p.get("image"):
-                  url = "https://api.telegram.org/bot" + token + "/sendPhoto"
-                  campos = {"chat_id": chat, "photo": p["image"], "caption": texto}
-              else:
-                  url = "https://api.telegram.org/bot" + token + "/sendMessage"
-                  prev = {"show_above_text": True, "prefer_large_media": True}
-                  campos = {"chat_id": chat, "text": texto, "link_preview_options": json.dumps(prev)}
-              corpo = urllib.parse.urlencode(campos).encode()
-
-              try:
-                  with urllib.request.urlopen(urllib.request.Request(url, data=corpo), timeout=30) as r:
-                      resposta = json.load(r)
-              except urllib.error.HTTPError as e:
-                  try:
-                      resposta = json.load(e)
-                  except Exception:
-                      resposta = {"ok": False, "description": "HTTP " + str(e.code)}
-              except Exception as e:
-                  resposta = {"ok": False, "description": type(e).__name__}
-
-              if resposta.get("ok"):
-                  p["status"] = "posted"
-                  enviadas += 1
-                  with open("products.json", "w", encoding="utf-8") as f:
-                      json.dump(dados, f, ensure_ascii=False, indent=2)
-                      f.write("\n")
-                  print("Enviada:", p["name"])
+              if p.get("status") == "pending":
+                  produto = p
                   break
-              else:
-                  print("Erro ao enviar:", p["name"], "-", resposta.get("description"))
-                  sys.exit(1)
 
-          print("Ofertas enviadas:", enviadas)
+          if produto is None:
+              print("Nenhum produto pendente.")
+              sys.exit(0)
+
+          nome = produto["name"]
+          link = produto.get("affiliate_link", "")
+
+          if not link:
+              print("Erro: produto sem link de afiliado:", nome)
+              sys.exit(1)
+
+          linhas = ["🔥😱 " + nome, ""]
+
+          if produto.get("price") is not None:
+              preco = float(produto["price"])
+              linhas.append("💰 R$ " + f"{preco:.2f}".replace(".", ","))
+
+          if produto.get("commission") is not None:
+              linhas.append("💸 Comissão: R$ " + str(produto["commission"]))
+
+          if produto.get("coupon"):
+              linhas.append("🎟️ Cupom: " + produto["coupon"])
+
+          linhas += [
+              "",
+              "⚠️ Preço e estoque sujeitos a alteração."
+          ]
+
+          texto = "\n".join(linhas)
+
+          teclado = {
+              "inline_keyboard": [[
+                  {
+                      "text": "🛒 VER OFERTA",
+                      "url": link
+                  }
+              ]]
+          }
+
+          if produto.get("image"):
+              metodo = "sendPhoto"
+              campos = {
+                  "chat_id": chat,
+                  "photo": produto["image"],
+                  "caption": texto,
+                  "reply_markup": json.dumps(teclado)
+              }
+          else:
+              metodo = "sendMessage"
+              campos = {
+                  "chat_id": chat,
+                  "text": texto,
+                  "reply_markup": json.dumps(teclado)
+              }
+
+          url = "https://api.telegram.org/bot" + token + "/" + metodo
+
+          corpo = urllib.parse.urlencode(campos).encode()
+
+          requisicao = urllib.request.Request(url, data=corpo)
+
+          try:
+              with urllib.request.urlopen(requisicao, timeout=30) as resposta:
+                  resultado = json.loads(resposta.read())
+          except Exception as erro:
+              print("Erro ao enviar:", erro)
+              sys.exit(1)
+
+          if not resultado.get("ok"):
+              print("Erro Telegram:", resultado)
+              sys.exit(1)
+
+          produto["status"] = "published"
+          produto["published_at"] = datetime.now(
+              timezone.utc
+          ).isoformat()
+
+          with open("products.json", "w", encoding="utf-8") as f:
+              json.dump(dados, f, ensure_ascii=False, indent=2)
+              f.write("\n")
+
+          print("Produto publicado:", nome)
+          print("Ofertas enviadas: 1")
           PY
 
       - name: Salvar o que foi publicado
-        if: always()
         run: |
           git config user.name "robo"
           git config user.email "robo@users.noreply.github.com"
           git add products.json
-          git diff --staged --quiet || (git commit -m "Ofertas publicadas" && git push)
+          git diff --cached --quiet || (
+            git commit -m "Oferta publicada" &&
+            git push
+          )
