@@ -1,5 +1,61 @@
 {
   "products": [
+        {
+      "id": "ml-webcam-001",
+      "name": "Câmera Webcam Logitech C920e for Business Full HD 30fps Preto",
+      "platform": "Mercado Livre",
+      "kind": "fisico",
+      "price": 288.85,
+      "old_price": 320,
+      "affiliate_link": "https://meli.la/15eREkv",
+      "status": "published"
+    },
+    {
+      "id": "ml-limpa-tela-001",
+      "name": "Limpa Tela Start com Pano Microfibra Limpador Isopropílico",
+      "platform": "Mercado Livre",
+      "kind": "fisico",
+      "price": 23.89,
+      "affiliate_link": "https://meli.la/1QZwVeP",
+      "status": "published"
+    },
+    {
+      "id": "ml-chaleira-001",
+      "name": "Chaleira Elétrica Atacama 1,8L - Unitermi",
+      "platform": "Mercado Livre",
+      "kind": "fisico",
+      "price": 49.90,
+      "affiliate_link": "https://meli.la/27SDDtf",
+      "status": "published"
+    },
+    {
+      "id": "ml-liquidificador-001",
+      "name": "Liquidificador Turbo Power Mondial 550W - L-99 FB",
+      "platform": "Mercado Livre",
+      "kind": "fisico",
+      "price": 99.90,
+      "affiliate_link": "https://meli.la/1mDig53",
+      "status": "published"
+    },
+    {
+      "id": "ml-sanduicheira-001",
+      "name": "Sanduicheira Elétrica Cadence SAN400 Preta",
+      "platform": "Mercado Livre",
+      "kind": "fisico",
+      "price": 86.94,
+      "affiliate_link": "https://meli.la/21ptQ6D",
+      "status": "published"
+    },
+    {
+      "id": "ml-mixer-001",
+      "name": "Mixer Elétrico Portátil 2 em 1 Recarregável - Misturador de Bebidas e Ovos 3 Velocidades USB Woosh",
+      "platform": "Mercado Livre",
+      "kind": "fisico",
+      "price": 19.49,
+      "affiliate_link": "https://meli.la/2rPgyLC",
+      "status": "published"
+    },
+
     {
       "id": "shopee-760bt-001",
       "name": "Fone de ouvido Wireless sem fio Bluetooth 760BT Microfone Pure Bass Cancelamento Ativo de Ruído",
