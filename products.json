@@ -18,7 +18,8 @@
       "kind": "fisico",
       "price": 23.89,
       "affiliate_link": "https://meli.la/1QZwVeP",
-      "status": "published"
+      "status": "posted",
+      "published_at": "2026-10-31T15:23:27.792397+00:00"
     },
     {
       "id": "ml-chaleira-001",
