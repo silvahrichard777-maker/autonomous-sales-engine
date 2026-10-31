@@ -1,92 +1,74 @@
-
-name: Publicar ofertas
+name: publicar
 
 on:
   workflow_dispatch:
-  schedule:
-    - cron: "0 11-23/2 * * *"
 
 permissions:
   contents: write
 
-concurrency:
-  group: publicar-ofertas
-  cancel-in-progress: false
-
 jobs:
   publicar:
     runs-on: ubuntu-latest
-
     steps:
       - name: Baixar arquivos
         uses: actions/checkout@v4
 
       - name: Publicar um produto no Telegram
         env:
-          TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
-          CHAT: ${{ secrets.TELEGRAM_CHAT_ID }}
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
         run: |
           python3 - <<'PY'
-          import json
-          import os
-          import sys
-          import urllib.parse
-          import urllib.request
+          import json, os, sys
+          import urllib.error, urllib.parse, urllib.request
           from datetime import datetime, timezone
 
-          token = os.environ.get("TOKEN", "").strip()
-          chat = os.environ.get("CHAT", "").strip()
-
-          if not token or not chat:
-              print("Erro: configure os Secrets do Telegram.")
-              sys.exit(1)
+          token = os.environ["TELEGRAM_BOT_TOKEN"].strip()
+          chat = os.environ["TELEGRAM_CHAT_ID"].strip()
 
           with open("products.json", encoding="utf-8") as f:
               dados = json.load(f)
 
-          produto = None
+          lista = dados if isinstance(dados, list) else dados.get("products", [])
 
-          for p in dados["products"]:
-              if p.get("status") == "pending":
+          produto = None
+          for p in lista:
+              if p.get("status") == "published":
                   produto = p
                   break
 
           if produto is None:
-              print("Nenhum produto pendente.")
+              print("Nenhum produto na fila (status published)")
               sys.exit(0)
 
-          nome = produto["name"]
+          nome = produto.get("name", "Oferta")
+          preco = produto.get("price")
+          cupom = produto.get("coupon")
           link = produto.get("affiliate_link", "")
+          loja = produto.get("platform", "")
 
           if not link:
-              print("Erro: produto sem link de afiliado:", nome)
+              print("Produto sem affiliate_link:", nome)
               sys.exit(1)
 
-          linhas = ["🔥😱 " + nome, ""]
+          if isinstance(preco, (int, float)):
+              preco = "R$ " + f"{preco:.2f}".replace(".", ",")
 
-          if produto.get("price") is not None:
-              preco = float(produto["price"])
-              linhas.append("💰 R$ " + f"{preco:.2f}".replace(".", ","))
-
-          if produto.get("commission") is not None:
-              linhas.append("💸 Comissão: R$ " + str(produto["commission"]))
-
-          if produto.get("coupon"):
-              linhas.append("🎟️ Cupom: " + produto["coupon"])
-
-          linhas += [
-              "",
-              "⚠️ Preço e estoque sujeitos a alteração."
-          ]
-
+          linhas = ["🔥 " + nome, ""]
+          if preco:
+              linhas.append("💰 Por " + str(preco))
+          if cupom:
+              linhas.append("🎟️ Cupom: " + str(cupom))
+          if loja:
+              linhas.append("🛒 " + str(loja))
+          linhas += ["", "👉 " + link, ""]
+          linhas.append("⚠️ Preço e estoque sujeitos a alteração.")
+          linhas.append("📢 Anúncio")
           texto = "\n".join(linhas)
 
           teclado = {
               "inline_keyboard": [[
-                  {
-                      "text": "🛒 VER OFERTA",
-                      "url": link
-                  }
+                  {"text": "🛒 Ver oferta", "url": link}
               ]]
           }
 
@@ -107,14 +89,15 @@ jobs:
               }
 
           url = "https://api.telegram.org/bot" + token + "/" + metodo
-
           corpo = urllib.parse.urlencode(campos).encode()
-
           requisicao = urllib.request.Request(url, data=corpo)
 
           try:
               with urllib.request.urlopen(requisicao, timeout=30) as resposta:
                   resultado = json.loads(resposta.read())
+          except urllib.error.HTTPError as erro:
+              print("Erro Telegram:", erro.read().decode())
+              sys.exit(1)
           except Exception as erro:
               print("Erro ao enviar:", erro)
               sys.exit(1)
@@ -123,17 +106,14 @@ jobs:
               print("Erro Telegram:", resultado)
               sys.exit(1)
 
-          produto["status"] = "published"
-          produto["published_at"] = datetime.now(
-              timezone.utc
-          ).isoformat()
+          produto["status"] = "posted"
+          produto["published_at"] = datetime.now(timezone.utc).isoformat()
 
           with open("products.json", "w", encoding="utf-8") as f:
               json.dump(dados, f, ensure_ascii=False, indent=2)
               f.write("\n")
 
           print("Produto publicado:", nome)
-          print("Ofertas enviadas: 1")
           PY
 
       - name: Salvar o que foi publicado
