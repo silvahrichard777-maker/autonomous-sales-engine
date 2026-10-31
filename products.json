@@ -30,12 +30,14 @@
       "price": 25.97,
       "affiliate_link": "https://meli.la/2RjSaZH",
       "status": "posted"
-    },{
-  "name": "Parafusadeira Impacto Mackie 2 Baterias e Maleta",
-  "platform": "Mercado Livre",
-  "price": 110.31,
-  "affiliate_link": "https://meli.la/2SREWHD",
-  "status": "published"
-}
+    },
+    {
+      "name": "Parafusadeira Impacto Mackie 2 Baterias e Maleta",
+      "platform": "Mercado Livre",
+      "price": 110.31,
+      "affiliate_link": "https://meli.la/2SREWHD",
+      "status": "posted",
+      "published_at": "2026-10-31T12:18:16.179231+00:00"
+    }
   ]
 }
