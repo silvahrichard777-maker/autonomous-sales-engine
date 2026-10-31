@@ -23,8 +23,10 @@ jobs:
           import urllib.error, urllib.parse, urllib.request
           from datetime import datetime, timezone
 
-          token = os.environ["TELEGRAM_BOT_TOKEN"].strip()
+          bruto = os.environ["TELEGRAM_BOT_TOKEN"]
+          token = "".join(bruto.split())
           chat = os.environ["TELEGRAM_CHAT_ID"].strip()
+          print("Token: tamanho", len(token), "| espacos removidos:", len(bruto) - len(token))
 
           with open("products.json", encoding="utf-8") as f:
               dados = json.load(f)
